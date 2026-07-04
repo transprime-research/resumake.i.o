@@ -7,6 +7,7 @@ import { MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md'
 
 import { colors } from '../../theme'
 import { resumeAtom } from '../../atoms/resume'
+import { renderModeAtom } from '../../atoms/renderMode'
 import { PrimaryButton } from '../core/Button'
 import { FormValues, ResumeSection } from '../../types'
 
@@ -118,6 +119,7 @@ function normalizeSections(sections: ResumeSection[]) {
 export function Sidebar() {
   const router = useRouter()
   const [resume] = useAtom(resumeAtom)
+  const [renderMode] = useAtom(renderModeAtom)
   const { control, setValue } = useFormContext<FormValues>()
   const sections = normalizeSections(
     useWatch({ control, name: 'sections' }) || sectionOrder
@@ -221,8 +223,15 @@ export function Sidebar() {
         })}
       </Nav>
 
-      <PrimaryButton form="resume-form" disabled={resume.isLoading}>
-        {resume.isLoading ? 'MAKING...' : 'MAKE'}
+      <PrimaryButton
+        form="resume-form"
+        disabled={resume.isLoading || renderMode === 'html'}
+      >
+        {renderMode === 'html'
+          ? 'LIVE PREVIEW'
+          : resume.isLoading
+          ? 'MAKING...'
+          : 'MAKE'}
       </PrimaryButton>
     </Aside>
   )

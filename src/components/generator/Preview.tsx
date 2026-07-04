@@ -1,9 +1,13 @@
 import { useAtom } from 'jotai'
 import { useState, useCallback } from 'react'
+import { useFormContext, useWatch } from 'react-hook-form'
 import { pdfjs, Document, Page } from 'react-pdf'
 import type { PDFDocumentProxy } from 'pdfjs-dist/types/src/display/api'
-import styled from 'styled-components'
+import styled, { createGlobalStyle } from 'styled-components'
 import { resumeAtom } from '../../atoms/resume'
+import { renderModeAtom } from '../../atoms/renderMode'
+import { FormValues } from '../../types'
+import { HtmlResumePreview } from './HtmlResumePreview'
 
 const workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`
 pdfjs.GlobalWorkerOptions.workerSrc = workerSrc
@@ -59,8 +63,29 @@ const ResumePage = styled(Page)`
   }
 `
 
+const PrintStyle = createGlobalStyle`
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+
+    .html-resume-print,
+    .html-resume-print * {
+      visibility: visible;
+    }
+
+    .html-resume-print {
+      position: absolute;
+      inset: 0 auto auto 0;
+    }
+  }
+`
+
 export function Preview() {
   const [resume] = useAtom(resumeAtom)
+  const [renderMode] = useAtom(renderModeAtom)
+  const { control } = useFormContext<FormValues>()
+  const values = useWatch({ control }) as FormValues
   const [, setPageCount] = useState(1)
   const [pageNumber] = useState(1)
   const [scale] = useState(document.body.clientWidth > 1440 ? 1.75 : 1)
@@ -93,10 +118,15 @@ export function Preview() {
   )
 
   const handleExportPdf = useCallback(() => {
+    if (renderMode === 'html') {
+      window.print()
+      return
+    }
+
     if (resume.url) {
       window.open(resume.url)
     }
-  }, [resume.url])
+  }, [renderMode, resume.url])
 
   const handleExportJson = useCallback(() => {
     downloadBlob(getSavedResume(), 'resume.json', 'application/json')
@@ -118,12 +148,9 @@ export function Preview() {
 
   return (
     <Output>
+      {renderMode === 'html' && <PrintStyle />}
       <ExportToolbar>
-        <ExportButton
-          type="button"
-          onClick={handleExportPdf}
-          disabled={!resume.url}
-        >
+        <ExportButton type="button" onClick={handleExportPdf}>
           PDF
         </ExportButton>
         <ExportButton type="button" onClick={handleExportJson}>
@@ -133,27 +160,33 @@ export function Preview() {
           LaTeX
         </ExportButton>
       </ExportToolbar>
-      {resume.isLoading && <StatusMessage>Generating PDF...</StatusMessage>}
-      {resume.isError && (
+      {renderMode === 'latex' && resume.isLoading && (
+        <StatusMessage>Generating PDF...</StatusMessage>
+      )}
+      {renderMode === 'latex' && resume.isError && (
         <ErrorMessage>
           {resume.errorMessage || 'Unable to generate your resume.'}
         </ErrorMessage>
       )}
-      <PdfContainer>
-        <ResumeDocument
-          file={resume.url || '/blank.pdf'}
-          onLoadSuccess={handleDocumentLoadSuccess}
-          loading=""
-        >
-          <ResumePage
-            pageNumber={pageNumber}
-            scale={scale}
-            renderAnnotationLayer={false}
-            renderTextLayer={false}
+      {renderMode === 'html' ? (
+        <HtmlResumePreview values={values} />
+      ) : (
+        <PdfContainer>
+          <ResumeDocument
+            file={resume.url || '/blank.pdf'}
+            onLoadSuccess={handleDocumentLoadSuccess}
             loading=""
-          />
-        </ResumeDocument>
-      </PdfContainer>
+          >
+            <ResumePage
+              pageNumber={pageNumber}
+              scale={scale}
+              renderAnnotationLayer={false}
+              renderTextLayer={false}
+              loading=""
+            />
+          </ResumeDocument>
+        </PdfContainer>
+      )}
     </Output>
   )
 }
