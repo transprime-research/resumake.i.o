@@ -75,12 +75,14 @@ const generator: Generator = {
       ${work.map((job) => {
         const {
           name,
+          company,
           position,
           location,
           startDate,
           endDate = '',
           highlights
         } = job
+        const companyName = company || name
 
         let dateRange = ''
         let highlightLines = ''
@@ -105,7 +107,7 @@ const generator: Generator = {
           \\cventry
             {${dateRange || ''}}
             {${position || ''}}
-            {${name || ''}}
+            {${companyName || ''}}
             {${location || ''}}
             {}
             {${highlightLines}}

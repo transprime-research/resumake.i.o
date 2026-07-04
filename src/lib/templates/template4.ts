@@ -144,19 +144,21 @@ const generator: Generator = {
       ${work.map((job) => {
         const {
           name,
+          company,
           position,
           location,
           startDate,
           endDate = '',
           highlights
         } = job
+        const companyName = company || name
 
         let line1 = ''
         let dateRange = ''
         let highlightLines = ''
 
-        if (name) {
-          line1 += `\\runsubsection{${name}}`
+        if (companyName) {
+          line1 += `\\runsubsection{${companyName}}`
         }
 
         if (position) {
