@@ -104,10 +104,12 @@ export default function Home() {
         />
       </Main>
       <Footer>
-        <Copyright>© 2022 Saad Quadri</Copyright>
+        <Copyright>© 2026 resumake.i.o</Copyright>
         <Link href="/about">About</Link>
-        <a href="https://github.com/saadq/resumake">Source</a>
-        <a href="https://github.com/saadq/resumake/issues">Issues</a>
+        <a href="https://github.com/transprime-research/resumake.i.o">Source</a>
+        <a href="https://github.com/transprime-research/resumake.i.o/issues">
+          Issues
+        </a>
       </Footer>
     </Wrapper>
   )
