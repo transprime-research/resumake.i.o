@@ -1,6 +1,6 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback } from 'react'
 import { useRouter } from 'next/router'
-import { FormProvider, useForm } from 'react-hook-form'
+import { useFormContext } from 'react-hook-form'
 import { useAtom } from 'jotai'
 import styled from 'styled-components'
 
@@ -32,7 +32,7 @@ const StyledForm = styled.form`
   overflow: auto;
 `
 
-const initialFormValues: FormValues = {
+export const initialFormValues: FormValues = {
   headings: {},
   sections: ['profile', 'education', 'work', 'skills', 'projects', 'awards'],
   selectedTemplate: 1
@@ -43,21 +43,7 @@ export function Form() {
   const { section: currSection = 'basics' } = router.query
 
   const [resume, setResume] = useAtom(resumeAtom)
-  const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
-
-  // TODO: move this to a custom react hook
-  useEffect(() => {
-    const lastSession = localStorage.getItem('jsonResume')
-    if (lastSession) {
-      // TODO: validate JSON schema using Zod
-      const jsonResume = JSON.parse(lastSession) as FormValues
-      formContext.reset(jsonResume)
-    }
-    const subscription = formContext.watch((data) => {
-      localStorage.setItem('jsonResume', JSON.stringify(data))
-    })
-    return () => subscription.unsubscribe()
-  }, [formContext])
+  const formContext = useFormContext<FormValues>()
 
   const handleFormSubmit = useCallback(async () => {
     if (resume.isLoading) {
@@ -96,19 +82,17 @@ export function Form() {
   }, [formContext, resume.isLoading, setResume])
 
   return (
-    <FormProvider {...formContext}>
-      <StyledForm
-        id="resume-form"
-        onSubmit={formContext.handleSubmit(handleFormSubmit)}
-      >
-        {currSection === 'templates' && <TemplatesSection />}
-        {currSection === 'basics' && <ProfileSection />}
-        {currSection === 'education' && <EducationSection />}
-        {currSection === 'work' && <WorkSection />}
-        {currSection === 'skills' && <SkillsSection />}
-        {currSection === 'awards' && <AwardSection />}
-        {currSection === 'projects' && <ProjectsSection />}
-      </StyledForm>
-    </FormProvider>
+    <StyledForm
+      id="resume-form"
+      onSubmit={formContext.handleSubmit(handleFormSubmit)}
+    >
+      {currSection === 'templates' && <TemplatesSection />}
+      {currSection === 'basics' && <ProfileSection />}
+      {currSection === 'education' && <EducationSection />}
+      {currSection === 'work' && <WorkSection />}
+      {currSection === 'skills' && <SkillsSection />}
+      {currSection === 'awards' && <AwardSection />}
+      {currSection === 'projects' && <ProjectsSection />}
+    </StyledForm>
   )
 }
