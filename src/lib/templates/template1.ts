@@ -107,14 +107,23 @@ const generator: Generator = {
       \\vspace{1mm}
 
       ${work.map((job) => {
-        const { name, position, location, startDate, endDate, highlights } = job
+        const {
+          company,
+          name,
+          position,
+          location,
+          startDate,
+          endDate,
+          highlights
+        } = job
+        const companyName = company || name
 
         let line1 = ''
         let line2 = ''
         let highlightLines = ''
 
-        if (name) {
-          line1 += `\\textbf{${name}}`
+        if (companyName) {
+          line1 += `\\textbf{${companyName}}`
         }
 
         if (location) {

@@ -98,12 +98,14 @@ const generator: Generator = {
       ${work.map((job) => {
         const {
           name,
+          company,
           position,
           location,
           startDate,
           endDate = '',
           highlights
         } = job
+        const companyName = company || name
 
         let dateRange = ''
         let highlightLines = ''
@@ -125,7 +127,7 @@ const generator: Generator = {
         }
 
         return stripIndent`
-          \\begin{cvsubsection}{${position || ''}}{${name || ''}}{${
+          \\begin{cvsubsection}{${position || ''}}{${companyName || ''}}{${
           dateRange || ''
         }}
             ${location || ''}

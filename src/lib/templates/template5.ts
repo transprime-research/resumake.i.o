@@ -103,18 +103,20 @@ const generator: Omit<Generator, 'resumeHeader'> = {
       ${work.map((job) => {
         const {
           name,
+          company,
           position,
           location,
           startDate,
           endDate = '',
           highlights
         } = job
+        const companyName = company || name
 
         let jobLine = ''
         let dateRange = ''
 
-        if (name) {
-          jobLine += `\\textbf{${name}}, `
+        if (companyName) {
+          jobLine += `\\textbf{${companyName}}, `
         }
 
         if (position) {

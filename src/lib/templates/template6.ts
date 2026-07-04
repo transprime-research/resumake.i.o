@@ -92,6 +92,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
 
       ${work.map((job) => {
         const {
+          company,
           name = '',
           position = '',
           location = '',
@@ -99,6 +100,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
           endDate = '',
           highlights = []
         } = job
+        const companyName = company || name
 
         let dateRange = ''
         let dutyLines = ''
@@ -121,7 +123,7 @@ const generator: Omit<Generator, 'resumeHeader'> = {
 
         return stripIndent`
           \\job
-            {${name}}
+            {${companyName}}
             {${dateRange}}
             {${position}}
             {${location}}

@@ -100,6 +100,7 @@ const generator: Generator = {
       ${work.map((job, i) => {
         const {
           name,
+          company,
           position,
           location,
           startDate,
@@ -107,7 +108,8 @@ const generator: Generator = {
           highlights
         } = job
 
-        const nameLine = [name, location].filter(Boolean).join(', ')
+        const companyName = company || name
+        const nameLine = [companyName, location].filter(Boolean).join(', ')
         let dateRange = ''
         let dutyLines = ''
 
