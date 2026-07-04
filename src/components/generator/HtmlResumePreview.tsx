@@ -162,7 +162,7 @@ const templateStyles: Record<number, HtmlTemplateStyle> = {
     accent: '#111827',
     border: '#111827',
     contactSeparator: ' | ',
-    entrySpacing: '18px',
+    entrySpacing: '14px',
     fontFamily: "'Helvetica Neue', Arial, sans-serif",
     headerLayout: 'right',
     headingCase: 'uppercase',
@@ -184,9 +184,17 @@ const Page = styled.article<{ $style: HtmlTemplateStyle }>`
   color: #111827;
   font-family: ${(props) => props.$style.fontFamily};
   font-size: ${(props) =>
-    props.$style.sectionStyle === 'res' ? '0.96rem' : '0.92rem'};
+    props.$style.sectionStyle === 'res'
+      ? '0.96rem'
+      : props.$style.sectionStyle === 'modern'
+      ? '0.84rem'
+      : '0.92rem'};
   line-height: ${(props) =>
-    props.$style.sectionStyle === 'compact' ? '1.34' : '1.45'};
+    props.$style.sectionStyle === 'compact'
+      ? '1.34'
+      : props.$style.sectionStyle === 'modern'
+      ? '1.28'
+      : '1.45'};
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.28);
 
   ${(props) =>
@@ -259,10 +267,10 @@ const Name = styled.h1<{ $style: HtmlTemplateStyle }>`
       : props.$style.sectionStyle === 'minimal'
       ? '2rem'
       : props.$style.sectionStyle === 'modern'
-      ? '2.8rem'
+      ? '2.45rem'
       : '2.2rem'};
   font-weight: ${(props) =>
-    ['awesome', 'minimal', 'modern'].includes(props.$style.sectionStyle)
+    ['awesome', 'minimal'].includes(props.$style.sectionStyle)
       ? 300
       : 700};
   letter-spacing: ${(props) =>
@@ -289,9 +297,21 @@ const Contact = styled.p<{ $style: HtmlTemplateStyle }>`
 
 const Section = styled.section<{ $style: HtmlTemplateStyle }>`
   margin-top: ${(props) =>
-    ['minimal', 'modern'].includes(props.$style.sectionStyle)
+    props.$style.sectionStyle === 'modern'
+      ? '18px'
+      : props.$style.sectionStyle === 'minimal'
       ? '26px'
       : '22px'};
+`
+
+const ModernAwardsSection = styled.section`
+  margin-top: 20px;
+  padding-top: 8px;
+  border-top: 3px solid #111827;
+`
+
+const ModernAwardsTitle = styled.p`
+  margin: 0 0 4px;
 `
 
 const SectionTitle = styled.h2<{ $style: HtmlTemplateStyle }>`
@@ -389,7 +409,7 @@ const EntryHeader = styled.div<{ $style: HtmlTemplateStyle }>`
   font-weight: 700;
 
   ${(props) =>
-    ['moderncv', 'modern'].includes(props.$style.sectionStyle) &&
+    props.$style.sectionStyle === 'moderncv' &&
     css`
       grid-template-columns: 120px minmax(0, 1fr);
     `}
@@ -444,7 +464,7 @@ const SkillTable = styled.div`
 const ModernDateBadge = styled.span`
   justify-self: end;
   min-width: 9em;
-  padding: 2px 8px;
+  padding: 1px 8px;
   background: #111827;
   color: #ffffff;
   font-size: 0.84rem;
@@ -458,7 +478,7 @@ const ModernDetail = styled.p`
 `
 
 const ModernSmall = styled.p`
-  margin: 4px 0 0;
+  margin: 3px 0 0;
   font-size: 0.86rem;
 `
 
@@ -583,6 +603,10 @@ function renderSection(
       )
 
     case 'awards':
+      if (templateStyle.sectionStyle === 'modern') {
+        return renderModernAwards(values, templateStyle)
+      }
+
       return renderEntries(
         section,
         values.headings.awards || 'Awards',
@@ -714,6 +738,19 @@ function renderAward(award: Award, templateStyle: HtmlTemplateStyle) {
   )
 }
 
+function renderModernAwards(values: FormValues, templateStyle: HtmlTemplateStyle) {
+  if (!values.awards?.length) {
+    return null
+  }
+
+  return (
+    <ModernAwardsSection key="awards">
+      <ModernAwardsTitle>{values.headings.awards || 'Awards'}</ModernAwardsTitle>
+      {values.awards.map((award) => renderModernAward(award, templateStyle))}
+    </ModernAwardsSection>
+  )
+}
+
 function renderSkills(values: FormValues, templateStyle: HtmlTemplateStyle) {
   if (!values.skills?.length) {
     return null
@@ -771,7 +808,7 @@ function renderModernEducation(
   templateStyle: HtmlTemplateStyle
 ) {
   const degree = [education.studyType, education.area].filter(Boolean).join(' ')
-  const school = [education.institution, education.location]
+  const school = [education.institution, education.location, education.score]
     .filter(Boolean)
     .join(', ')
   const dateRange = joinDateRange(education.startDate, education.endDate)
@@ -783,16 +820,13 @@ function renderModernEducation(
         {dateRange && <ModernDateBadge>{dateRange}</ModernDateBadge>}
       </EntryHeader>
       {school && <ModernDetail>{school}</ModernDetail>}
-      {education.score && <ModernSmall>GPA: {education.score}</ModernSmall>}
     </Entry>
   )
 }
 
 function renderModernWork(work: Work, templateStyle: HtmlTemplateStyle) {
   const dateRange = joinDateRange(work.startDate, work.endDate)
-  const company = [work.company || work.name, work.location]
-    .filter(Boolean)
-    .join(', ')
+  const company = [work.name, work.location].filter(Boolean).join(', ')
 
   return (
     <Entry key={`${work.company || work.name}-${work.position}`} $style={templateStyle}>

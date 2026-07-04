@@ -19,6 +19,7 @@ import {
   TEMPLATE9
 } from './constants'
 import { FormValues, TemplateData } from '../../types'
+import { sanitizeLatexInput } from '../latex-escape'
 
 /**
  * Generates the LaTeX document based on the selected template
@@ -29,10 +30,11 @@ import { FormValues, TemplateData } from '../../types'
  * @return The generated LaTeX document as well as its additional opts.
  */
 export default function getTemplateData(data: FormValues): TemplateData {
+  const sanitizedData = sanitizeLatexInput(data)
   const visibleData = {
-    ...data,
-    sections: data.sections.filter(
-      (section) => !data.hiddenSections?.includes(section)
+    ...sanitizedData,
+    sections: sanitizedData.sections.filter(
+      (section) => !sanitizedData.hiddenSections?.includes(section)
     )
   }
 
