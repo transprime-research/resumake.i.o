@@ -1,9 +1,11 @@
 import Link from 'next/link'
 import { useRouter } from 'next/router'
+import { useAtom } from 'jotai'
 import styled from 'styled-components'
 import { MdDragIndicator } from 'react-icons/md'
 
 import { colors } from '../../theme'
+import { resumeAtom } from '../../atoms/resume'
 import { PrimaryButton, IconButton } from '../core/Button'
 
 const Aside = styled.aside`
@@ -35,6 +37,7 @@ const StyledLink = styled(Link)<{ $active: boolean }>`
 
 export function Sidebar() {
   const router = useRouter()
+  const [resume] = useAtom(resumeAtom)
   const { section: currSection = 'basics' } = router.query
 
   const sectionLinks = [
@@ -65,7 +68,9 @@ export function Sidebar() {
         ))}
       </Nav>
 
-      <PrimaryButton form="resume-form">MAKE</PrimaryButton>
+      <PrimaryButton form="resume-form" disabled={resume.isLoading}>
+        {resume.isLoading ? 'MAKING...' : 'MAKE'}
+      </PrimaryButton>
     </Aside>
   )
 }

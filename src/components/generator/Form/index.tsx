@@ -14,12 +14,17 @@ import { ProjectsSection } from './sections/projectsSection'
 import { resumeAtom } from '../../../atoms/resume'
 import { FormValues } from '../../../types'
 
-import latex from '../../../lib/latex'
 import getTemplateData from '../../../lib/templates'
+import fallbackPdf from '../../../lib/fallback-pdf'
+import texlyre from '../../../lib/texlyre'
 
 async function generateResume(formData: FormValues): Promise<string> {
   const { texDoc, opts } = getTemplateData(formData)
-  return latex(texDoc, opts)
+  try {
+    return await texlyre(texDoc, opts)
+  } catch {
+    return fallbackPdf(formData)
+  }
 }
 
 const StyledForm = styled.form`
@@ -55,16 +60,40 @@ export function Form() {
   }, [formContext])
 
   const handleFormSubmit = useCallback(async () => {
+    if (resume.isLoading) {
+      return
+    }
+
     const formValues = formContext.getValues()
-    setResume({ ...resume, isLoading: true })
+    setResume((currResume) => ({
+      ...currResume,
+      isLoading: true,
+      isError: false,
+      errorMessage: ''
+    }))
     try {
       const newResumeUrl = await generateResume(formValues)
-      setResume({ ...resume, url: newResumeUrl, isLoading: false })
+      setResume((currResume) => ({
+        ...currResume,
+        url: newResumeUrl,
+        isLoading: false,
+        isError: false,
+        errorMessage: ''
+      }))
     } catch (error) {
-      console.error(error)
-      setResume({ ...resume, isError: true, isLoading: false })
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Unable to generate your resume.'
+
+      setResume((currResume) => ({
+        ...currResume,
+        isError: true,
+        isLoading: false,
+        errorMessage
+      }))
     }
-  }, [formContext, resume, setResume])
+  }, [formContext, resume.isLoading, setResume])
 
   return (
     <FormProvider {...formContext}>

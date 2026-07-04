@@ -4,12 +4,14 @@ export interface Resume {
   url: string
   isLoading: boolean
   isError: boolean
+  errorMessage: string
 }
 
 export const resumeAtom = atom({
   url: '',
   isLoading: false,
-  isError: false
+  isError: false,
+  errorMessage: ''
 })
 
 resumeAtom.debugLabel = 'resumeAtom'

@@ -19,6 +19,15 @@ const PdfContainer = styled.article`
   height: 100%;
 `
 
+const StatusMessage = styled.div`
+  padding: 1rem;
+  color: white;
+`
+
+const ErrorMessage = styled(StatusMessage)`
+  color: #ff8f8f;
+`
+
 const ResumeDocument = styled(Document)`
   width: 100%;
 `
@@ -48,6 +57,12 @@ export function Preview() {
   return (
     <Output>
       <button onClick={() => window.open(resume.url)}>export as pdf</button>
+      {resume.isLoading && <StatusMessage>Generating PDF...</StatusMessage>}
+      {resume.isError && (
+        <ErrorMessage>
+          {resume.errorMessage || 'Unable to generate your resume.'}
+        </ErrorMessage>
+      )}
       <PdfContainer>
         <ResumeDocument
           file={resume.url || '/blank.pdf'}

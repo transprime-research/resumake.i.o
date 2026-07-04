@@ -1,4 +1,5 @@
 import type { NextApiRequest, NextApiResponse } from 'next'
+import path from 'path'
 import Archiver from 'archiver'
 import { stripIndent } from 'common-tags'
 import getTemplateData from '../../lib/templates'
@@ -37,8 +38,11 @@ function generateSourceCode(formData: FormValues) {
   zip.append(prettyDoc, { name: 'resume.tex' })
   zip.append(readme, { name: 'README.md' })
 
-  if (opts.inputs) {
-    zip.directory(opts.inputs, '../')
+  for (const asset of [...(opts.inputs || []), ...(opts.fonts || [])]) {
+    const assetPath = asset.replace(/^\//, '')
+    zip.file(path.join(process.cwd(), 'public', assetPath), {
+      name: assetPath
+    })
   }
 
   zip.finalize()
