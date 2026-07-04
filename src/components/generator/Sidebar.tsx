@@ -3,12 +3,12 @@ import { useRouter } from 'next/router'
 import { useAtom } from 'jotai'
 import { useFormContext, useWatch } from 'react-hook-form'
 import styled from 'styled-components'
-import { MdDragIndicator } from 'react-icons/md'
+import { MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md'
 
 import { colors } from '../../theme'
 import { resumeAtom } from '../../atoms/resume'
-import { PrimaryButton, IconButton } from '../core/Button'
-import { FormValues } from '../../types'
+import { PrimaryButton } from '../core/Button'
+import { FormValues, ResumeSection } from '../../types'
 
 const Aside = styled.aside`
   grid-area: sidebar;
@@ -24,14 +24,11 @@ const Nav = styled.nav`
   gap: 18px;
   margin-bottom: 28px;
 
-  button {
-    cursor: grab;
-  }
 `
 
 const NavItem = styled.div`
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) 20px;
+  grid-template-columns: 38px minmax(0, 1fr) 20px;
   align-items: center;
   gap: 8px;
   width: 100%;
@@ -54,9 +51,37 @@ const SectionToggle = styled.input`
   cursor: pointer;
 `
 
-type SectionName = FormValues['sections'][number]
+const ReorderControls = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 18px);
+  gap: 2px;
+`
 
-const sectionOrder: SectionName[] = [
+const ReorderButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 22px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: ${colors.foreground};
+  cursor: pointer;
+
+  :disabled {
+    cursor: not-allowed;
+    color: #4b5563;
+  }
+
+  :hover:not(:disabled),
+  :focus:not(:disabled) {
+    background: ${colors.borders};
+  }
+`
+
+const sectionOrder: ResumeSection[] = [
   'profile',
   'education',
   'work',
@@ -65,35 +90,42 @@ const sectionOrder: SectionName[] = [
   'awards'
 ]
 
+const sectionLabels: Record<ResumeSection, string> = {
+  profile: 'Profile',
+  education: 'Education',
+  work: 'Work Experience',
+  skills: 'Skills',
+  projects: 'Projects',
+  awards: 'Awards'
+}
+
+const sectionRoutes: Record<ResumeSection, string> = {
+  profile: 'basics',
+  education: 'education',
+  work: 'work',
+  skills: 'skills',
+  projects: 'projects',
+  awards: 'awards'
+}
+
+function normalizeSections(sections: ResumeSection[]) {
+  return [
+    ...sections,
+    ...sectionOrder.filter((section) => !sections.includes(section))
+  ]
+}
+
 export function Sidebar() {
   const router = useRouter()
   const [resume] = useAtom(resumeAtom)
   const { control, setValue } = useFormContext<FormValues>()
-  const enabledSections = useWatch({ control, name: 'sections' }) || []
+  const sections = normalizeSections(
+    useWatch({ control, name: 'sections' }) || sectionOrder
+  )
+  const hiddenSections = useWatch({ control, name: 'hiddenSections' }) || []
   const { section: currSection = 'basics' } = router.query
 
-  const sectionLinks: {
-    label: string
-    section: string
-    resumeSection?: SectionName
-  }[] = [
-    { label: 'Templates', section: 'templates' },
-    { label: 'Profile', section: 'basics', resumeSection: 'profile' },
-    { label: 'Education', section: 'education', resumeSection: 'education' },
-    { label: 'Work Experience', section: 'work', resumeSection: 'work' },
-    { label: 'Skills', section: 'skills', resumeSection: 'skills' },
-    { label: 'Projects', section: 'projects', resumeSection: 'projects' },
-    { label: 'Awards', section: 'awards', resumeSection: 'awards' }
-  ]
-
-  const toggleSection = (section: SectionName) => {
-    const nextSections = enabledSections.includes(section)
-      ? enabledSections.filter((currSection) => currSection !== section)
-      : sectionOrder.filter(
-          (currSection) =>
-            enabledSections.includes(currSection) || currSection === section
-        )
-
+  const updateSections = (nextSections: ResumeSection[]) => {
     setValue('sections', nextSections, {
       shouldDirty: true,
       shouldTouch: true,
@@ -101,18 +133,75 @@ export function Sidebar() {
     })
   }
 
+  const toggleSection = (section: ResumeSection) => {
+    const nextHiddenSections = hiddenSections.includes(section)
+      ? hiddenSections.filter((currSection) => currSection !== section)
+      : [...hiddenSections, section]
+
+    setValue('hiddenSections', nextHiddenSections, {
+      shouldDirty: true,
+      shouldTouch: true,
+      shouldValidate: true
+    })
+  }
+
+  const moveSection = (section: ResumeSection, direction: -1 | 1) => {
+    const currIndex = sections.indexOf(section)
+    const nextIndex = currIndex + direction
+
+    if (currIndex === -1 || nextIndex < 0 || nextIndex >= sections.length) {
+      return
+    }
+
+    const nextSections = [...sections]
+    const nextSection = nextSections[nextIndex]
+
+    nextSections[nextIndex] = section
+    nextSections[currIndex] = nextSection
+    updateSections(nextSections)
+  }
+
   return (
     <Aside>
       <Nav>
-        {sectionLinks.map(({ label, section, resumeSection }) => {
-          const isEnabled =
-            !resumeSection || enabledSections.includes(resumeSection)
+        <NavItem>
+          <span />
+          <StyledLink
+            href="/generator?section=templates"
+            $active={currSection === 'templates'}
+            $enabled
+          >
+            Templates
+          </StyledLink>
+          <span />
+        </NavItem>
+        {sections.map((resumeSection, index) => {
+          const label = sectionLabels[resumeSection]
+          const section = sectionRoutes[resumeSection]
+          const isEnabled = !hiddenSections.includes(resumeSection)
 
           return (
-            <NavItem key={section}>
-              <IconButton type="button">
-                <MdDragIndicator />
-              </IconButton>
+            <NavItem key={resumeSection}>
+              <ReorderControls>
+                <ReorderButton
+                  type="button"
+                  disabled={index === 0}
+                  aria-label={`Move ${label} up`}
+                  title={`Move ${label} up`}
+                  onClick={() => moveSection(resumeSection, -1)}
+                >
+                  <MdKeyboardArrowUp />
+                </ReorderButton>
+                <ReorderButton
+                  type="button"
+                  disabled={index === sections.length - 1}
+                  aria-label={`Move ${label} down`}
+                  title={`Move ${label} down`}
+                  onClick={() => moveSection(resumeSection, 1)}
+                >
+                  <MdKeyboardArrowDown />
+                </ReorderButton>
+              </ReorderControls>
               <StyledLink
                 href={`/generator?section=${section}`}
                 $active={section === currSection}
@@ -120,15 +209,13 @@ export function Sidebar() {
               >
                 {label}
               </StyledLink>
-              {resumeSection && (
-                <SectionToggle
-                  type="checkbox"
-                  checked={isEnabled}
-                  aria-label={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
-                  title={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
-                  onChange={() => toggleSection(resumeSection)}
-                />
-              )}
+              <SectionToggle
+                type="checkbox"
+                checked={isEnabled}
+                aria-label={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
+                title={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
+                onChange={() => toggleSection(resumeSection)}
+              />
             </NavItem>
           )
         })}

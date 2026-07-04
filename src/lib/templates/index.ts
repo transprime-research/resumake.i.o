@@ -29,10 +29,17 @@ import { FormValues, TemplateData } from '../../types'
  * @return The generated LaTeX document as well as its additional opts.
  */
 export default function getTemplateData(data: FormValues): TemplateData {
-  switch (data.selectedTemplate) {
+  const visibleData = {
+    ...data,
+    sections: data.sections.filter(
+      (section) => !data.hiddenSections?.includes(section)
+    )
+  }
+
+  switch (visibleData.selectedTemplate) {
     case TEMPLATE1:
       return {
-        texDoc: template1(data),
+        texDoc: template1(visibleData),
         opts: {
           cmd: 'pdflatex'
         }
@@ -40,7 +47,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE2:
       return {
-        texDoc: template2(data),
+        texDoc: template2(visibleData),
         opts: {
           cmd: 'xelatex',
           inputs: [
@@ -73,7 +80,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE3:
       return {
-        texDoc: template3(data),
+        texDoc: template3(visibleData),
         opts: {
           cmd: 'pdflatex'
         }
@@ -81,7 +88,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE4:
       return {
-        texDoc: template4(data),
+        texDoc: template4(visibleData),
         opts: {
           cmd: 'xelatex',
           inputs: ['/templates/template4/deedy-resume-openfont.cls'],
@@ -101,7 +108,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE5:
       return {
-        texDoc: template5(data),
+        texDoc: template5(visibleData),
         opts: {
           cmd: 'xelatex',
           inputs: [
@@ -113,7 +120,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE6:
       return {
-        texDoc: template6(data),
+        texDoc: template6(visibleData),
         opts: {
           cmd: 'xelatex',
           inputs: [
@@ -138,7 +145,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE7:
       return {
-        texDoc: template7(data),
+        texDoc: template7(visibleData),
         opts: {
           cmd: 'pdflatex',
           inputs: [
@@ -155,7 +162,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE8:
       return {
-        texDoc: template8(data),
+        texDoc: template8(visibleData),
         opts: {
           cmd: 'xelatex',
           inputs: ['/templates/template8/mcdowellcv.cls']
@@ -164,7 +171,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     case TEMPLATE9:
       return {
-        texDoc: template9(data),
+        texDoc: template9(visibleData),
         opts: {
           cmd: 'pdflatex'
         }
@@ -172,7 +179,7 @@ export default function getTemplateData(data: FormValues): TemplateData {
 
     default:
       return {
-        texDoc: template1(data),
+        texDoc: template1(visibleData),
         opts: {
           cmd: 'pdflatex'
         }

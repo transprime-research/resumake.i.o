@@ -6,7 +6,7 @@ import styled from 'styled-components'
 import { Form, initialFormValues } from '../components/generator/Form'
 import { Header } from '../components/generator/Header'
 import { Sidebar } from '../components/generator/Sidebar'
-import { FormValues } from '../types'
+import { FormValues, ResumeSection } from '../types'
 
 const Preview = dynamic(
   async () => (await import('../components/generator/Preview')).Preview,
@@ -23,6 +23,36 @@ const Main = styled.main`
   height: 100vh;
 `
 
+const sectionOrder: ResumeSection[] = [
+  'profile',
+  'education',
+  'work',
+  'skills',
+  'projects',
+  'awards'
+]
+
+function normalizeSections(savedSections?: ResumeSection[]) {
+  if (!savedSections?.length) {
+    return initialFormValues.sections
+  }
+
+  return [
+    ...savedSections,
+    ...sectionOrder.filter((section) => !savedSections.includes(section))
+  ]
+}
+
+function normalizeHiddenSections(jsonResume: FormValues) {
+  const hiddenSections = jsonResume.hiddenSections || []
+  const savedSections = jsonResume.sections || initialFormValues.sections
+
+  return [
+    ...hiddenSections,
+    ...sectionOrder.filter((section) => !savedSections.includes(section))
+  ]
+}
+
 export default function GeneratorPage() {
   const formContext = useForm<FormValues>({ defaultValues: initialFormValues })
 
@@ -38,7 +68,8 @@ export default function GeneratorPage() {
           ...initialFormValues.headings,
           ...jsonResume.headings
         },
-        sections: jsonResume.sections || initialFormValues.sections
+        sections: normalizeSections(jsonResume.sections),
+        hiddenSections: normalizeHiddenSections(jsonResume)
       })
     }
 

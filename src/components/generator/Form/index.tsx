@@ -35,6 +35,7 @@ const StyledForm = styled.form`
 export const initialFormValues: FormValues = {
   headings: {},
   sections: ['profile', 'education', 'work', 'skills', 'projects', 'awards'],
+  hiddenSections: [],
   selectedTemplate: 1
 }
 
