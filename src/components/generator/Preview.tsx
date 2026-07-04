@@ -81,6 +81,12 @@ const PrintStyle = createGlobalStyle`
   }
 `
 
+function getDocumentStyles() {
+  return Array.from(document.querySelectorAll('style[data-styled]'))
+    .map((style) => style.outerHTML)
+    .join('\n')
+}
+
 export function Preview() {
   const [resume] = useAtom(resumeAtom)
   const [renderMode] = useAtom(renderModeAtom)
@@ -146,19 +152,55 @@ export function Preview() {
     downloadBlob(await response.blob(), 'resume.zip', 'application/zip')
   }, [downloadBlob, getSavedResume])
 
+  const handleExportHtml = useCallback(() => {
+    const resumeElement = document.querySelector('.html-resume-print')
+
+    if (!resumeElement) {
+      return
+    }
+
+    const htmlDocument = `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resume</title>
+    ${getDocumentStyles()}
+    <style>
+      body {
+        margin: 0;
+        background: #f3f4f6;
+      }
+    </style>
+  </head>
+  <body>
+    ${resumeElement.outerHTML}
+  </body>
+</html>`
+
+    downloadBlob(htmlDocument, 'resume.html', 'text/html')
+  }, [downloadBlob])
+
   return (
     <Output>
       {renderMode === 'html' && <PrintStyle />}
       <ExportToolbar>
         <ExportButton type="button" onClick={handleExportPdf}>
-          PDF
+          {renderMode === 'html' ? 'Print PDF' : 'PDF'}
         </ExportButton>
+        {renderMode === 'html' && (
+          <ExportButton type="button" onClick={handleExportHtml}>
+            HTML
+          </ExportButton>
+        )}
         <ExportButton type="button" onClick={handleExportJson}>
           JSON
         </ExportButton>
-        <ExportButton type="button" onClick={handleExportLatex}>
-          LaTeX
-        </ExportButton>
+        {renderMode === 'latex' && (
+          <ExportButton type="button" onClick={handleExportLatex}>
+            LaTeX
+          </ExportButton>
+        )}
       </ExportToolbar>
       {renderMode === 'latex' && resume.isLoading && (
         <StatusMessage>Generating PDF...</StatusMessage>

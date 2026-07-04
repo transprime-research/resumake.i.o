@@ -1,10 +1,11 @@
 import Link from 'next/link'
 import { useAtom } from 'jotai'
+import { useCallback, useEffect } from 'react'
 import styled from 'styled-components'
 
 import { Logo } from '../core/Logo'
 import { colors } from '../../theme'
-import { renderModeAtom } from '../../atoms/renderMode'
+import { RenderMode, renderModeAtom } from '../../atoms/renderMode'
 
 const StyledHeader = styled.header`
   grid-area: header;
@@ -38,6 +39,22 @@ const ModeButton = styled.button<{ $active: boolean }>`
 export function Header() {
   const [renderMode, setRenderMode] = useAtom(renderModeAtom)
 
+  useEffect(() => {
+    const savedRenderMode = localStorage.getItem('renderMode')
+
+    if (savedRenderMode === 'html' || savedRenderMode === 'latex') {
+      setRenderMode(savedRenderMode)
+    }
+  }, [setRenderMode])
+
+  const handleModeChange = useCallback(
+    (nextRenderMode: RenderMode) => {
+      setRenderMode(nextRenderMode)
+      localStorage.setItem('renderMode', nextRenderMode)
+    },
+    [setRenderMode]
+  )
+
   return (
     <StyledHeader>
       <Link href="/">
@@ -47,14 +64,14 @@ export function Header() {
         <ModeButton
           type="button"
           $active={renderMode === 'html'}
-          onClick={() => setRenderMode('html')}
+          onClick={() => handleModeChange('html')}
         >
           HTML
         </ModeButton>
         <ModeButton
           type="button"
           $active={renderMode === 'latex'}
-          onClick={() => setRenderMode('latex')}
+          onClick={() => handleModeChange('latex')}
         >
           LaTeX
         </ModeButton>
