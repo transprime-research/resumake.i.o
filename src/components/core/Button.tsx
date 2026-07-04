@@ -70,6 +70,10 @@ export const AddButton = styled.button`
   color: ${colors.primary};
 `
 
+export const RemoveButton = styled(AddButton)`
+  color: #ff8f8f;
+`
+
 export const IconButton = styled.button`
   display: flex;
   align-items: center;

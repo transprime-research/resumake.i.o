@@ -3,13 +3,14 @@ import { useFieldArray } from 'react-hook-form'
 
 import { FormSection } from './FormSection'
 import { LabeledInput } from '../../../core/LabeledInput'
-import { AddButton } from '../../../core/Button'
+import { AddButton, RemoveButton } from '../../../core/Button'
 import { Divider } from '../../../core/Divider'
+import { confirmRemove } from './remove'
 
 import { Award } from '../../../../types'
 
 export function AwardSection() {
-  const { fields, append } = useFieldArray({ name: 'awards' })
+  const { fields, append, remove } = useFieldArray({ name: 'awards' })
 
   const handleAdd = () => {
     const defaultAward: Award = {
@@ -56,6 +57,12 @@ export function AwardSection() {
             label="Summary"
             placeholder="Recognized for creating the most awesome project at a hackathon."
           />
+          <RemoveButton
+            type="button"
+            onClick={() => confirmRemove('award', () => remove(index))}
+          >
+            Remove Award
+          </RemoveButton>
           <Divider />
         </Fragment>
       ))}
