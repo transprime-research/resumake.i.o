@@ -14,6 +14,21 @@ const Output = styled.output`
   overflow-y: auto;
 `
 
+const ExportToolbar = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.75rem;
+`
+
+const ExportButton = styled.button`
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+  cursor: pointer;
+  padding: 0.45rem 0.7rem;
+`
+
 const PdfContainer = styled.article`
   width: 100%;
   height: 100%;
@@ -54,9 +69,70 @@ export function Preview() {
     setPageCount(pdf.numPages)
   }, [])
 
+  const getSavedResume = useCallback(() => {
+    const savedResume = localStorage.getItem('jsonResume')
+
+    if (!savedResume) {
+      return '{}'
+    }
+
+    return savedResume
+  }, [])
+
+  const downloadBlob = useCallback(
+    (content: BlobPart, filename: string, type: string) => {
+      const url = URL.createObjectURL(new Blob([content], { type }))
+      const anchor = document.createElement('a')
+
+      anchor.href = url
+      anchor.download = filename
+      anchor.click()
+      URL.revokeObjectURL(url)
+    },
+    []
+  )
+
+  const handleExportPdf = useCallback(() => {
+    if (resume.url) {
+      window.open(resume.url)
+    }
+  }, [resume.url])
+
+  const handleExportJson = useCallback(() => {
+    downloadBlob(getSavedResume(), 'resume.json', 'application/json')
+  }, [downloadBlob, getSavedResume])
+
+  const handleExportLatex = useCallback(async () => {
+    const response = await fetch('/api/generate-source', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: getSavedResume()
+    })
+
+    if (!response.ok) {
+      return
+    }
+
+    downloadBlob(await response.blob(), 'resume.zip', 'application/zip')
+  }, [downloadBlob, getSavedResume])
+
   return (
     <Output>
-      <button onClick={() => window.open(resume.url)}>export as pdf</button>
+      <ExportToolbar>
+        <ExportButton
+          type="button"
+          onClick={handleExportPdf}
+          disabled={!resume.url}
+        >
+          PDF
+        </ExportButton>
+        <ExportButton type="button" onClick={handleExportJson}>
+          JSON
+        </ExportButton>
+        <ExportButton type="button" onClick={handleExportLatex}>
+          LaTeX
+        </ExportButton>
+      </ExportToolbar>
       {resume.isLoading && <StatusMessage>Generating PDF...</StatusMessage>}
       {resume.isError && (
         <ErrorMessage>
