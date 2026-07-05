@@ -26,6 +26,11 @@ async function generateResume(formData: FormValues): Promise<string> {
 const StyledForm = styled.form`
   grid-area: form;
   overflow: auto;
+
+  @media (max-width: 900px) {
+    min-height: 0;
+    padding-bottom: 32px;
+  }
 `
 
 export const initialFormValues: FormValues = {

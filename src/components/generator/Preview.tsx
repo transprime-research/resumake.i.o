@@ -16,6 +16,10 @@ const Output = styled.output`
   grid-area: preview;
   background: ${(props) => props.theme.lightBlack};
   overflow-y: auto;
+
+  @media (max-width: 900px) {
+    min-height: 0;
+  }
 `
 
 const ExportToolbar = styled.div`
@@ -23,6 +27,14 @@ const ExportToolbar = styled.div`
   flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.75rem;
+
+  @media (max-width: 900px) {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    background: ${(props) => props.theme.lightBlack};
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
 `
 
 const ExportButton = styled.button`
@@ -31,6 +43,11 @@ const ExportButton = styled.button`
   color: white;
   cursor: pointer;
   padding: 0.45rem 0.7rem;
+
+  @media (max-width: 900px) {
+    min-height: 40px;
+    flex: 1 1 auto;
+  }
 `
 
 const PdfContainer = styled.article`
@@ -61,22 +78,72 @@ const ResumePage = styled(Page)`
     max-width: 95% !important;
     height: auto !important;
   }
+
+  @media (max-width: 900px) {
+    padding: 1rem 0 6rem 0;
+
+    canvas {
+      max-width: calc(100% - 24px) !important;
+    }
+  }
 `
 
 const PrintStyle = createGlobalStyle`
+  body > .resume-print-clone {
+    position: fixed;
+    left: -10000px;
+    bottom: 0;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+  }
+
   @media print {
-    body * {
-      visibility: hidden;
+    @page {
+      size: A4;
+      margin: 0;
     }
 
-    .html-resume-print,
-    .html-resume-print * {
-      visibility: visible;
+    html,
+    body,
+    #__next {
+      width: 100%;
+      height: auto;
+      margin: 0;
+      padding: 0;
+      background: #ffffff !important;
+      overflow: visible !important;
     }
 
-    .html-resume-print {
-      position: absolute;
-      inset: 0 auto auto 0;
+    body.printing-html-resume > *:not(.resume-print-clone) {
+      display: none !important;
+    }
+
+    body.printing-html-resume > .resume-print-clone {
+      display: block !important;
+      position: static !important;
+      width: 210mm !important;
+      height: auto !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #ffffff !important;
+      overflow: visible !important;
+      min-height: auto !important;
+      box-shadow: none !important;
+      box-sizing: border-box !important;
+      break-after: avoid !important;
+      page-break-after: avoid !important;
+    }
+
+    body.printing-html-resume > .resume-print-clone.html-resume-print {
+      width: 210mm !important;
+      max-width: 210mm !important;
+      min-height: auto !important;
+      margin: 0 !important;
+      padding: 14mm 16mm !important;
+      box-sizing: border-box !important;
+      box-shadow: none !important;
+      overflow: visible !important;
     }
   }
 `
@@ -85,6 +152,35 @@ function getDocumentStyles() {
   return Array.from(document.querySelectorAll('style[data-styled]'))
     .map((style) => style.outerHTML)
     .join('\n')
+}
+
+function createResumeHtmlDocument(resumeElement: Element, print = false) {
+  return `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Resume</title>
+    ${getDocumentStyles()}
+    <style>
+      @page {
+        size: A4;
+        margin: 0;
+      }
+
+      html,
+      body {
+        margin: 0;
+        background: ${print ? '#ffffff' : '#f3f4f6'};
+      }
+
+      ${print ? '.html-resume-print { margin: 0 !important; box-shadow: none !important; }' : ''}
+    </style>
+  </head>
+  <body>
+    ${resumeElement.outerHTML}
+  </body>
+</html>`
 }
 
 export function Preview() {
@@ -125,7 +221,29 @@ export function Preview() {
 
   const handleExportPdf = useCallback(() => {
     if (renderMode === 'html') {
-      window.print()
+      const resumeElement = document.querySelector('.html-resume-print')
+
+      if (!resumeElement) {
+        return
+      }
+
+      const printClone = resumeElement.cloneNode(true) as HTMLElement
+      const cleanup = () => {
+        printClone.remove()
+        document.body.classList.remove('printing-html-resume')
+      }
+
+      printClone.classList.add('resume-print-clone')
+      document.body.classList.add('printing-html-resume')
+      document.body.appendChild(printClone)
+      window.addEventListener('afterprint', cleanup, { once: true })
+
+      window.requestAnimationFrame(() => {
+        window.requestAnimationFrame(() => {
+          window.print()
+          window.setTimeout(cleanup, 60000)
+        })
+      })
       return
     }
 
@@ -159,24 +277,7 @@ export function Preview() {
       return
     }
 
-    const htmlDocument = `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Resume</title>
-    ${getDocumentStyles()}
-    <style>
-      body {
-        margin: 0;
-        background: #f3f4f6;
-      }
-    </style>
-  </head>
-  <body>
-    ${resumeElement.outerHTML}
-  </body>
-</html>`
+    const htmlDocument = createResumeHtmlDocument(resumeElement)
 
     downloadBlob(htmlDocument, 'resume.html', 'text/html')
   }, [downloadBlob])

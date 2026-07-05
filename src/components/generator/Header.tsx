@@ -16,6 +16,11 @@ const StyledHeader = styled.header`
   align-items: center;
   padding: 0 36px;
   border-bottom: 1px solid ${colors.borders};
+
+  @media (max-width: 900px) {
+    height: 72px;
+    padding: 0 16px;
+  }
 `
 
 const ModeControl = styled.div`
@@ -34,6 +39,10 @@ const ModeButton = styled.button<{ $active: boolean }>`
   cursor: pointer;
   font: inherit;
   font-size: 0.8rem;
+
+  @media (max-width: 420px) {
+    min-width: 64px;
+  }
 `
 
 export function Header() {

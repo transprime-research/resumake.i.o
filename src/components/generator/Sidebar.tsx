@@ -3,7 +3,12 @@ import { useRouter } from 'next/router'
 import { useAtom } from 'jotai'
 import { useFormContext, useWatch } from 'react-hook-form'
 import styled from 'styled-components'
-import { MdKeyboardArrowDown, MdKeyboardArrowUp } from 'react-icons/md'
+import {
+  MdCheck,
+  MdKeyboardArrowDown,
+  MdKeyboardArrowUp,
+  MdMenu
+} from 'react-icons/md'
 
 import { colors } from '../../theme'
 import { resumeAtom } from '../../atoms/resume'
@@ -15,6 +20,103 @@ const Aside = styled.aside`
   grid-area: sidebar;
   border-right: 1px solid ${colors.borders};
   padding: 24px 36px;
+
+  @media (max-width: 900px) {
+    border-right: none;
+    border-bottom: 1px solid ${colors.borders};
+    padding: 12px 16px;
+    overflow: visible;
+
+    > button {
+      width: 100%;
+      height: 40px;
+      margin: 10px 0 0;
+    }
+  }
+`
+
+const MobileSections = styled.details`
+  display: none;
+
+  @media (max-width: 900px) {
+    display: block;
+    position: relative;
+  }
+`
+
+const MobileSectionsSummary = styled.summary`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid ${colors.borders};
+  border-radius: 6px;
+  background: ${colors.card};
+  color: ${colors.foreground};
+  cursor: pointer;
+  list-style: none;
+
+  ::-webkit-details-marker {
+    display: none;
+  }
+`
+
+const MobileSectionsLabel = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+`
+
+const MobileNav = styled.nav`
+  display: none;
+
+  @media (max-width: 900px) {
+    position: absolute;
+    inset: calc(100% + 8px) 0 auto 0;
+    z-index: 4;
+    display: grid;
+    gap: 6px;
+    max-height: min(70vh, 420px);
+    overflow: auto;
+    padding: 10px;
+    border: 1px solid ${colors.borders};
+    border-radius: 8px;
+    background: ${colors.card};
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.35);
+  }
+`
+
+const MobileNavItem = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  gap: 8px;
+  align-items: center;
+`
+
+const MobileLink = styled(Link)<{ $active: boolean; $enabled: boolean }>`
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: ${(props) => (props.$enabled ? colors.foreground : '#6b7280')};
+  text-decoration: none;
+  background: ${(props) => (props.$active ? colors.borders : 'transparent')};
+
+  ${(props) => props.$active && `color: ${colors.primary};`}
+`
+
+const MobileToggle = styled.button<{ $enabled: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 42px;
+  border: 1px solid ${colors.borders};
+  border-radius: 6px;
+  background: ${(props) => (props.$enabled ? colors.primary : 'transparent')};
+  color: ${(props) => (props.$enabled ? colors.black : colors.foreground)};
+  cursor: pointer;
 `
 
 const Nav = styled.nav`
@@ -25,6 +127,9 @@ const Nav = styled.nav`
   gap: 18px;
   margin-bottom: 28px;
 
+  @media (max-width: 900px) {
+    display: none;
+  }
 `
 
 const NavItem = styled.div`
@@ -33,6 +138,18 @@ const NavItem = styled.div`
   align-items: center;
   gap: 8px;
   width: 100%;
+
+  @media (max-width: 900px) {
+    grid-template-columns: minmax(0, auto) 20px;
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 36px;
+    padding: 0 2px;
+
+    > span:first-child {
+      display: none;
+    }
+  }
 `
 
 const StyledLink = styled(Link)<{ $active: boolean; $enabled: boolean }>`
@@ -40,8 +157,18 @@ const StyledLink = styled(Link)<{ $active: boolean; $enabled: boolean }>`
   font-weight: 300;
   color: ${(props) => (props.$enabled ? colors.foreground : '#6b7280')};
   min-width: 0;
+  white-space: nowrap;
 
   ${(props) => props.$active && `color: ${colors.primary};`}
+
+  @media (max-width: 900px) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 36px;
+    padding: 0 8px;
+    border-radius: 6px;
+    background: ${(props) => (props.$active ? colors.borders : 'transparent')};
+  }
 `
 
 const SectionToggle = styled.input`
@@ -50,12 +177,21 @@ const SectionToggle = styled.input`
   margin: 0;
   accent-color: ${colors.primary};
   cursor: pointer;
+
+  @media (max-width: 900px) {
+    width: 18px;
+    height: 18px;
+  }
 `
 
 const ReorderControls = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 18px);
   gap: 2px;
+
+  @media (max-width: 900px) {
+    display: none;
+  }
 `
 
 const ReorderButton = styled.button`
@@ -165,6 +301,53 @@ export function Sidebar() {
 
   return (
     <Aside>
+      <MobileSections>
+        <MobileSectionsSummary>
+          <MobileSectionsLabel>
+            <MdMenu />
+            Sections
+          </MobileSectionsLabel>
+          <MdKeyboardArrowDown />
+        </MobileSectionsSummary>
+        <MobileNav>
+          <MobileNavItem>
+            <MobileLink
+              href="/generator?section=templates"
+              $active={currSection === 'templates'}
+              $enabled
+            >
+              Templates
+            </MobileLink>
+            <span />
+          </MobileNavItem>
+          {sections.map((resumeSection) => {
+            const label = sectionLabels[resumeSection]
+            const section = sectionRoutes[resumeSection]
+            const isEnabled = !hiddenSections.includes(resumeSection)
+
+            return (
+              <MobileNavItem key={resumeSection}>
+                <MobileLink
+                  href={`/generator?section=${section}`}
+                  $active={section === currSection}
+                  $enabled={isEnabled}
+                >
+                  {label}
+                </MobileLink>
+                <MobileToggle
+                  type="button"
+                  $enabled={isEnabled}
+                  aria-label={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
+                  title={`${isEnabled ? 'Hide' : 'Show'} ${label}`}
+                  onClick={() => toggleSection(resumeSection)}
+                >
+                  <MdCheck />
+                </MobileToggle>
+              </MobileNavItem>
+            )
+          })}
+        </MobileNav>
+      </MobileSections>
       <Nav>
         <NavItem>
           <span />
@@ -226,6 +409,7 @@ export function Sidebar() {
       <PrimaryButton
         form="resume-form"
         disabled={resume.isLoading || renderMode === 'html'}
+        type="submit"
       >
         {renderMode === 'html'
           ? 'LIVE PREVIEW'

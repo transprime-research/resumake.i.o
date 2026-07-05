@@ -217,10 +217,12 @@ const Page = styled.article<{ $style: HtmlTemplateStyle }>`
     `}
 
   @media print {
-    width: 100%;
+    width: 210mm;
+    max-width: 210mm;
     min-height: auto;
     margin: 0;
-    padding: 42px 48px;
+    padding: 14mm 16mm;
+    box-sizing: border-box;
     box-shadow: none;
   }
 
@@ -248,7 +250,7 @@ const Header = styled.header<{ $style: HtmlTemplateStyle }>`
       ? 'right'
       : 'left'};
   border-bottom: ${(props) =>
-    ['classic', 'res', 'modern'].includes(props.$style.sectionStyle)
+    ['classic', 'res'].includes(props.$style.sectionStyle)
       ? `2px solid ${props.$style.border}`
       : 'none'};
 
