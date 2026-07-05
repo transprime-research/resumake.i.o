@@ -304,16 +304,6 @@ const Section = styled.section<{ $style: HtmlTemplateStyle }>`
       : '22px'};
 `
 
-const ModernAwardsSection = styled.section`
-  margin-top: 20px;
-  padding-top: 8px;
-  border-top: 3px solid #111827;
-`
-
-const ModernAwardsTitle = styled.p`
-  margin: 0 0 4px;
-`
-
 const SectionTitle = styled.h2<{ $style: HtmlTemplateStyle }>`
   margin: 0 0 10px;
   color: ${(props) => props.$style.sectionColor};
@@ -603,10 +593,6 @@ function renderSection(
       )
 
     case 'awards':
-      if (templateStyle.sectionStyle === 'modern') {
-        return renderModernAwards(values, templateStyle)
-      }
-
       return renderEntries(
         section,
         values.headings.awards || 'Awards',
@@ -735,19 +721,6 @@ function renderAward(award: Award, templateStyle: HtmlTemplateStyle) {
       )}
       {award.summary && <Paragraph>{award.summary}</Paragraph>}
     </Entry>
-  )
-}
-
-function renderModernAwards(values: FormValues, templateStyle: HtmlTemplateStyle) {
-  if (!values.awards?.length) {
-    return null
-  }
-
-  return (
-    <ModernAwardsSection key="awards">
-      <ModernAwardsTitle>{values.headings.awards || 'Awards'}</ModernAwardsTitle>
-      {values.awards.map((award) => renderModernAward(award, templateStyle))}
-    </ModernAwardsSection>
   )
 }
 

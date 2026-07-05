@@ -15,16 +15,12 @@ import { resumeAtom } from '../../../atoms/resume'
 import { FormValues } from '../../../types'
 
 import getTemplateData from '../../../lib/templates'
-import fallbackPdf from '../../../lib/fallback-pdf'
 import texlyre from '../../../lib/texlyre'
 
 async function generateResume(formData: FormValues): Promise<string> {
   const { texDoc, opts } = getTemplateData(formData)
-  try {
-    return await texlyre(texDoc, opts)
-  } catch {
-    return fallbackPdf(formData)
-  }
+
+  return texlyre(texDoc, opts)
 }
 
 const StyledForm = styled.form`
